@@ -31,10 +31,7 @@ public class VideoPlayerPipPlugin: NSObject, FlutterPlugin, AVPictureInPictureCo
         return
       }
       
-      let width = args["width"] as? Int
-      let height = args["height"] as? Int
-      
-      enterPipMode(playerId: playerId, width: width, height: height, completion: result)
+      enterPipMode(playerId: playerId, completion: result)
       
     case "exitPipMode":
       exitPipMode(completion: result)
@@ -54,7 +51,7 @@ public class VideoPlayerPipPlugin: NSObject, FlutterPlugin, AVPictureInPictureCo
     return false
   }
   
-  private func enterPipMode(playerId: Int, width: Int?, height: Int?, completion: @escaping FlutterResult) {
+  private func enterPipMode(playerId: Int, completion: @escaping FlutterResult) {
     if !isPipSupported() {
       completion(false)
       return
@@ -71,14 +68,6 @@ public class VideoPlayerPipPlugin: NSObject, FlutterPlugin, AVPictureInPictureCo
     if #available(iOS 14.0, *) {
       pipController = AVPictureInPictureController(playerLayer: playerLayer)
       pipController?.delegate = self
-      
-      // Configure custom size if provided (iOS 15.0+)
-      if #available(iOS 15.0, *), let width = width, let height = height {
-        if let pipController = pipController {
-          let customSize = CGSize(width: width, height: height)
-          pipController.preferredContentSize = customSize
-        }
-      }
       
       // Start PiP
       pipController?.startPictureInPicture()
@@ -102,11 +91,28 @@ public class VideoPlayerPipPlugin: NSObject, FlutterPlugin, AVPictureInPictureCo
    * This searches through the view hierarchy to find the platform view created by video_player.
    */
   private func findAVPlayerLayer(playerId: Int) -> AVPlayerLayer? {
-    if let rootViewController = UIApplication.shared.keyWindow?.rootViewController {
+    // Use a more modern approach to get the active window
+    let keyWindow = getKeyWindow()
+    if let rootViewController = keyWindow?.rootViewController {
       // Start with the root view and search recursively
       return findAVPlayerLayerInView(rootViewController.view)
     }
     return nil
+  }
+  
+  /**
+   * Get the key window using a more modern approach that works on iOS 13+
+   */
+  private func getKeyWindow() -> UIWindow? {
+    if #available(iOS 13.0, *) {
+      return UIApplication.shared.connectedScenes
+        .filter { $0.activationState == .foregroundActive }
+        .compactMap { $0 as? UIWindowScene }
+        .first?.windows
+        .filter { $0.isKeyWindow }.first
+    } else {
+      return UIApplication.shared.keyWindow
+    }
   }
   
   /**
