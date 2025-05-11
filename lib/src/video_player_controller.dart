@@ -12,10 +12,33 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
+// Import platform implementations
+import 'package:video_player_android/video_player_android.dart';
+import 'package:video_player_avfoundation/video_player_avfoundation.dart';
+
+// Track if platforms have been registered
+bool _platformsInitialized = false;
+
+// Initialize platform implementations
+void _initializeVideoPlayerPlatforms() {
+  if (!_platformsInitialized) {
+    // Only register the platform implementation for the current platform
+    if (Platform.isAndroid) {
+      AndroidVideoPlayer.registerWith();
+    } else if (Platform.isIOS) {
+      AVFoundationVideoPlayer.registerWith();
+    }
+    // Web implementation is registered automatically
+    _platformsInitialized = true;
+  }
+}
 
 VideoPlayerPlatform? _cachedPlatform;
 
 VideoPlayerPlatform get _platform {
+  // First register the platform implementations
+  _initializeVideoPlayerPlatforms();
+
   if (_cachedPlatform == null) {
     _cachedPlatform = VideoPlayerPlatform.instance;
     _cachedPlatform!.init();

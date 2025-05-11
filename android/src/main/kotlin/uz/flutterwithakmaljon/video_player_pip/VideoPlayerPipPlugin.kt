@@ -1,4 +1,4 @@
-package com.example.video_player_pip
+package uz.flutterwithakmaljon.video_player_pip
 
 import android.app.Activity
 import android.app.PictureInPictureParams

@@ -1,7 +1,7 @@
 name: video_player_pip
 description: A Flutter plugin that adds picture-in-picture support for video_player
 version: 0.0.1
-homepage: https://github.com/yourusername/video_player_pip
+homepage: https://github.com/AkmaljonAbdirakhimov/video_player_pip
 
 environment:
   sdk: ^3.7.2
@@ -11,8 +11,11 @@ dependencies:
   flutter:
     sdk: flutter
   plugin_platform_interface: ^2.1.8
+  video_player_android: ^2.8.3
+  video_player_avfoundation: ^2.7.1
   video_player_platform_interface: ^6.3.0
 
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -36,7 +39,7 @@ flutter:
   plugin:
     platforms:
       android:
-        package: com.example.video_player_pip
+        package: uz.flutterwithakmaljon.video_player_pip
         pluginClass: VideoPlayerPipPlugin
       ios:
         pluginClass: VideoPlayerPipPlugin

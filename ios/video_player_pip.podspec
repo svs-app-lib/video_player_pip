@@ -9,9 +9,9 @@ Pod::Spec.new do |s|
   s.description      = <<-DESC
 A Flutter plugin that adds Picture-in-Picture functionality to the video_player package.
                        DESC
-  s.homepage         = 'https://github.com/yourusername/video_player_pip'
+  s.homepage         = 'https://github.com/AkmaljonAbdirakhimov/video_player_pip'
   s.license          = { :file => '../LICENSE' }
-  s.author           = { 'Your Name' => 'your.email@example.com' }
+  s.author           = { 'Akmaljon Abdirakhimov' => 'akmaljonabdirakhimov@gmail.com' }
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
   s.dependency 'Flutter'

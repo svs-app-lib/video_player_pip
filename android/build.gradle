@@ -1,4 +1,4 @@
-group = "com.example.video_player_pip"
+group = "uz.flutterwithakmaljon.video_player_pip"
 version = "1.0-SNAPSHOT"
 
 buildscript {
@@ -25,7 +25,7 @@ apply plugin: "com.android.library"
 apply plugin: "kotlin-android"
 
 android {
-    namespace = "com.example.video_player_pip"
+    namespace = "uz.flutterwithakmaljon.video_player_pip"
 
     compileSdk = 35
 

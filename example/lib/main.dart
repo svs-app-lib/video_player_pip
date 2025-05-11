@@ -81,6 +81,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
       _videoInitialized = true;
     } catch (e) {
+      print(e);
       setState(() {
         _debugStatus = "Error initializing VideoPlayerController: $e";
       });

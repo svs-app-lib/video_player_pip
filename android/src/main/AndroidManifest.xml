@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-  package="com.example.video_player_pip">
+  package="uz.flutterwithakmaljon.video_player_pip">
     <!-- Required for PiP support on Android 8.0+ -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     
