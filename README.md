@@ -50,7 +50,16 @@ For Android 12 and higher, also add:
 
 #### iOS
 
-For iOS, no additional setup is required. The plugin handles the necessary setup internally.
+For iOS, you need to add the following to your `Info.plist` file to enable background audio playback, which is necessary for PiP functionality when the app is in the background:
+
+```xml
+<key>UIBackgroundModes</key>
+<array>
+  <string>audio</string>
+</array>
+```
+
+This ensures that your application can continue playing audio when it enters Picture-in-Picture mode and the main app UI is no longer in the foreground.
 
 ## Usage
 

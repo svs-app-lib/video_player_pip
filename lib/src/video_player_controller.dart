@@ -62,6 +62,7 @@ class VideoPlayerValue {
     this.isBuffering = false,
     this.playbackSpeed = 1.0,
     this.errorDescription,
+    this.isCompleted = false,
   });
 
   /// Returns an instance for a video that hasn't been loaded.
@@ -100,6 +101,12 @@ class VideoPlayerValue {
   ///
   /// If [hasError] is false this is `null`.
   final String? errorDescription;
+
+  /// True if video has finished playing to end.
+  ///
+  /// Reverts to false if video position changes, or video begins playing.
+  /// Does not update if video is looping.
+  final bool isCompleted;
 
   /// The [size] of the currently loaded video.
   final Size size;
@@ -140,6 +147,7 @@ class VideoPlayerValue {
     bool? isBuffering,
     double? playbackSpeed,
     String? errorDescription,
+    bool? isCompleted,
   }) {
     return VideoPlayerValue(
       duration: duration ?? this.duration,
@@ -151,6 +159,7 @@ class VideoPlayerValue {
       isBuffering: isBuffering ?? this.isBuffering,
       playbackSpeed: playbackSpeed ?? this.playbackSpeed,
       errorDescription: errorDescription ?? this.errorDescription,
+      isCompleted: isCompleted ?? this.isCompleted,
     );
   }
 
@@ -167,7 +176,8 @@ class VideoPlayerValue {
           playbackSpeed == other.playbackSpeed &&
           errorDescription == other.errorDescription &&
           size == other.size &&
-          isInitialized == other.isInitialized;
+          isInitialized == other.isInitialized &&
+          isCompleted == other.isCompleted;
 
   @override
   int get hashCode => Object.hash(
@@ -180,6 +190,7 @@ class VideoPlayerValue {
     errorDescription,
     size,
     isInitialized,
+    isCompleted,
   );
 }
 
@@ -292,6 +303,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
             duration: event.duration,
             size: event.size,
             isInitialized: event.duration != null,
+            isCompleted: false,
           );
           initializingCompleter.complete(null);
           _platform.setVolume(_playerId, 1.0);
@@ -299,6 +311,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           _applyPlayPause();
         case VideoEventType.completed:
           pause().then((void pauseResult) => seekTo(value.duration));
+          value = value.copyWith(isCompleted: true);
         case VideoEventType.bufferingUpdate:
           value = value.copyWith(buffered: event.buffered);
         case VideoEventType.bufferingStart:
@@ -306,7 +319,14 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
         case VideoEventType.bufferingEnd:
           value = value.copyWith(isBuffering: false);
         case VideoEventType.isPlayingStateUpdate:
-          value = value.copyWith(isPlaying: event.isPlaying);
+          if (event.isPlaying ?? false) {
+            value = value.copyWith(
+              isPlaying: event.isPlaying,
+              isCompleted: false,
+            );
+          } else {
+            value = value.copyWith(isPlaying: event.isPlaying);
+          }
         case VideoEventType.unknown:
           break;
       }
@@ -399,7 +419,13 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   }
 
   void _updatePosition(Duration position) {
-    value = value.copyWith(position: position);
+    if (position > value.duration) {
+      position = value.duration;
+    }
+    value = value.copyWith(
+      position: position,
+      isCompleted: position == value.duration,
+    );
   }
 }
 
