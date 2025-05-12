@@ -145,13 +145,6 @@ class VideoPlayerPipPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
         val paramsBuilder = PictureInPictureParams.Builder()
             .setAspectRatio(aspectRatio)
         
-        // Only enable auto-enter PiP when explicitly requested by user
-        // This prevents PiP triggering automatically when app goes to background
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            paramsBuilder.setAutoEnterEnabled(pipRequestedByUser)
-            Log.d(TAG, "Setting autoEnterEnabled to $pipRequestedByUser (Android 12+)")
-        }
-        
         // Set source rect for smoother transitions on Android 12+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val location = IntArray(2)
