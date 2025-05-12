@@ -1,9 +1,7 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'src/video_player_controller.dart';
-import 'src/extensions.dart';
 import 'video_player_pip_platform_interface.dart';
 
 /// A Flutter plugin that adds Picture-in-Picture (PiP) functionality to the video_player package.
@@ -55,42 +53,12 @@ class VideoPlayerPip {
     VideoPlayerController controller, {
     int? width,
     int? height,
-    BuildContext? context,
   }) {
     if (controller.playerId == VideoPlayerController.kUninitializedPlayerId) {
       debugPrint(
         'VideoPlayerPip: Cannot enter PiP mode with uninitialized controller',
       );
       return Future.value(false);
-    }
-
-    if (Platform.isAndroid) {
-      if (context == null) {
-        debugPrint(
-          'VideoPlayerPip: Context is required for Android PiP mode. Please provide a context parameter.',
-        );
-        return Future.value(false);
-      }
-
-      // Calculate dimensions if not provided
-      final aspectRatio = controller.value.aspectRatio;
-      final pipWidth = width ?? 300;
-      final pipHeight = height ?? (pipWidth / aspectRatio).round();
-
-      // Show PiP window
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder:
-              (context) => _PipVideo(
-                controller: controller,
-                width: pipWidth,
-                height: pipHeight,
-              ),
-        ),
-      );
-
-      return Future.value(true);
     }
 
     // iOS implementation uses native PiP
@@ -152,12 +120,7 @@ class VideoPlayerPip {
     if (isInPip) {
       return await exitPipMode();
     } else {
-      return await enterPipMode(
-        controller,
-        width: width,
-        height: height,
-        context: context,
-      );
+      return await enterPipMode(controller, width: width, height: height);
     }
   }
 
@@ -197,57 +160,5 @@ class VideoPlayerPip {
       _onPipModeChangedController.close();
     }
     _channel.setMethodCallHandler(null);
-  }
-}
-
-/// Private implementation of PiP video widget for Android
-class _PipVideo extends StatefulWidget {
-  final VideoPlayerController controller;
-  final int width;
-  final int height;
-
-  const _PipVideo({
-    required this.controller,
-    required this.width,
-    required this.height,
-  });
-
-  @override
-  State<_PipVideo> createState() => _PipVideoState();
-}
-
-class _PipVideoState extends State<_PipVideo> {
-  @override
-  void initState() {
-    super.initState();
-    _initPip();
-  }
-
-  void _initPip() async {
-    // Call the native PiP API
-    await VideoPlayerPip._platform.enterPipMode(
-      widget.controller.playerId,
-      width: widget.width,
-      height: widget.height,
-    );
-
-    // Monitor PiP state changes
-    widget.controller.onPipModeChanged.listen((isInPipMode) {
-      if (!isInPipMode && mounted) {
-        Navigator.pop(context);
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: AspectRatio(
-          aspectRatio: widget.controller.value.aspectRatio,
-          child: VideoPlayer(widget.controller),
-        ),
-      ),
-    );
   }
 }

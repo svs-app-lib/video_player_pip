@@ -10,12 +10,7 @@ extension VideoPlayerControllerExtension on VideoPlayerController {
 
   /// Enters PiP mode for the specified player ID.
   Future<bool> enterPipMode({int? width, int? height, BuildContext? context}) {
-    return VideoPlayerPip.enterPipMode(
-      this,
-      width: width,
-      height: height,
-      context: context,
-    );
+    return VideoPlayerPip.enterPipMode(this, width: width, height: height);
   }
 
   /// Exits PiP mode.
