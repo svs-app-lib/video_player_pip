@@ -80,6 +80,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
       });
 
       _videoInitialized = true;
+
+      _controller.addListener(() {
+        print("buffering: ${_controller.value.isBuffering}");
+      });
     } catch (e) {
       print(e);
       setState(() {

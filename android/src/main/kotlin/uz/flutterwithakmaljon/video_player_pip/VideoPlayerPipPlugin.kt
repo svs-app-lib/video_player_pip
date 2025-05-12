@@ -36,6 +36,11 @@ class VideoPlayerPipPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
   // Cache of player ID to view mappings to improve performance for multiple calls
   private val playerViewCache = mutableMapOf<Int, View?>()
   
+  // Track the active player ID to ensure PiP only works for video screen
+  private var activePlayerId: Int? = null
+  // Track if PiP was requested by user vs auto-triggered
+  private var pipRequestedByUser = false
+  
   override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
     channel = MethodChannel(flutterPluginBinding.binaryMessenger, "video_player_pip")
     channel.setMethodCallHandler(this)
@@ -59,6 +64,9 @@ class VideoPlayerPipPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
         Log.d(TAG, "Entering PiP mode for playerId: $playerId, width: $width, height: $height")
         
         if (playerId != null) {
+          // Set active player ID when user explicitly requests PiP
+          activePlayerId = playerId
+          pipRequestedByUser = true
           val success = enterPipMode(playerId, width, height)
           Log.d(TAG, "Enter PiP result: $success")
           result.success(success)
@@ -69,7 +77,12 @@ class VideoPlayerPipPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
       }
       "exitPipMode" -> {
         Log.d(TAG, "Exiting PiP mode, current state: $isInPipMode")
+        // Clear active player ID when exiting PiP
+        pipRequestedByUser = false
         val success = exitPipMode()
+        if (success) {
+          activePlayerId = null
+        }
         Log.d(TAG, "Exit PiP result: $success")
         result.success(success)
       }
@@ -132,10 +145,11 @@ class VideoPlayerPipPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
         val paramsBuilder = PictureInPictureParams.Builder()
             .setAspectRatio(aspectRatio)
         
-        // Add auto-enter PiP for Android 12+
+        // Only enable auto-enter PiP when explicitly requested by user
+        // This prevents PiP triggering automatically when app goes to background
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            paramsBuilder.setAutoEnterEnabled(true)
-            Log.d(TAG, "Setting autoEnterEnabled to true (Android 12+)")
+            paramsBuilder.setAutoEnterEnabled(pipRequestedByUser)
+            Log.d(TAG, "Setting autoEnterEnabled to $pipRequestedByUser (Android 12+)")
         }
         
         // Set source rect for smoother transitions on Android 12+
@@ -199,6 +213,11 @@ class VideoPlayerPipPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
             it.startActivity(it.packageManager.getLaunchIntentForPackage(it.packageName))
           }
         }
+        
+        // Reset PiP state
+        isInPipMode = false
+        pipRequestedByUser = false
+        
         return true
       }
       Log.d(TAG, "Not in PiP mode, cannot exit")
@@ -364,6 +383,11 @@ class VideoPlayerPipPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
     activity = null
     activityBinding = null
     playerViewCache.clear()
+    
+    // Reset PiP state on detach
+    isInPipMode = false
+    activePlayerId = null
+    pipRequestedByUser = false
   }
   
   private fun setupPipModeChangeListener(binding: ActivityPluginBinding) {
@@ -390,6 +414,13 @@ class VideoPlayerPipPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
           
           if (isInPipMode != isInPictureInPictureMode) {
             isInPipMode = isInPictureInPictureMode
+            
+            // If PiP mode is exited, clear the active player ID
+            if (!isInPipMode) {
+              activePlayerId = null
+              pipRequestedByUser = false
+            }
+            
             notifyPipModeChanged()
           }
         }
@@ -423,6 +454,13 @@ class VideoPlayerPipPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
       
       if (newPipState != isInPipMode) {
         isInPipMode = newPipState
+        
+        // If exiting PiP mode, reset the player ID
+        if (!isInPipMode) {
+          activePlayerId = null
+          pipRequestedByUser = false
+        }
+        
         notifyPipModeChanged()
       }
     }

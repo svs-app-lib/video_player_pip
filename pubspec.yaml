@@ -6,6 +6,7 @@ homepage: https://github.com/AkmaljonAbdirakhimov/video_player_pip
 environment:
   sdk: ^3.7.2
   flutter: '>=3.3.0'
+   
 
 dependencies:
   flutter:

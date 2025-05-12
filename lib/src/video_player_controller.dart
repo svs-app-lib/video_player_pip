@@ -33,17 +33,20 @@ void _initializeVideoPlayerPlatforms() {
   }
 }
 
-VideoPlayerPlatform? _cachedPlatform;
+VideoPlayerPlatform? _lastVideoPlayerPlatform;
 
-VideoPlayerPlatform get _platform {
+VideoPlayerPlatform get _videoPlayerPlatform {
   // First register the platform implementations
   _initializeVideoPlayerPlatforms();
 
-  if (_cachedPlatform == null) {
-    _cachedPlatform = VideoPlayerPlatform.instance;
-    _cachedPlatform!.init();
+  final VideoPlayerPlatform currentInstance = VideoPlayerPlatform.instance;
+  if (_lastVideoPlayerPlatform != currentInstance) {
+    // This will clear all open videos on the platform when a full restart is
+    // performed.
+    currentInstance.init();
+    _lastVideoPlayerPlatform = currentInstance;
   }
-  return _cachedPlatform!;
+  return currentInstance;
 }
 
 /// The duration, current position, buffering state, error state and settings
@@ -291,7 +294,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     );
 
     _playerId =
-        (await _platform.createWithOptions(creationOptions)) ??
+        (await _videoPlayerPlatform.createWithOptions(creationOptions)) ??
         kUninitializedPlayerId;
     _creatingCompleter!.complete(null);
     final Completer<void> initializingCompleter = Completer<void>();
@@ -306,8 +309,8 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
             isCompleted: false,
           );
           initializingCompleter.complete(null);
-          _platform.setVolume(_playerId, 1.0);
-          _platform.setLooping(_playerId, true);
+          _videoPlayerPlatform.setVolume(_playerId, 1.0);
+          _videoPlayerPlatform.setLooping(_playerId, true);
           _applyPlayPause();
         case VideoEventType.completed:
           pause().then((void pauseResult) => seekTo(value.duration));
@@ -341,7 +344,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       }
     }
 
-    _eventSubscription = _platform
+    _eventSubscription = _videoPlayerPlatform
         .videoEventsFor(_playerId)
         .listen(eventListener, onError: errorListener);
     return initializingCompleter.future;
@@ -353,7 +356,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       await _creatingCompleter!.future;
       _timer?.cancel();
       await _eventSubscription?.cancel();
-      await _platform.dispose(_playerId);
+      await _videoPlayerPlatform.dispose(_playerId);
     }
     super.dispose();
   }
@@ -373,7 +376,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   Future<void> _applyPlayPause() async {
     _timer?.cancel();
     if (value.isPlaying) {
-      await _platform.play(_playerId);
+      await _videoPlayerPlatform.play(_playerId);
 
       _timer = Timer.periodic(const Duration(milliseconds: 500), (
         Timer timer,
@@ -386,19 +389,22 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       });
       await _applyPlaybackSpeed();
     } else {
-      await _platform.pause(_playerId);
+      await _videoPlayerPlatform.pause(_playerId);
     }
   }
 
   Future<void> _applyPlaybackSpeed() async {
     if (value.isPlaying) {
-      await _platform.setPlaybackSpeed(_playerId, value.playbackSpeed);
+      await _videoPlayerPlatform.setPlaybackSpeed(
+        _playerId,
+        value.playbackSpeed,
+      );
     }
   }
 
   /// The position in the current video.
   Future<Duration?> get position async {
-    return _platform.getPosition(_playerId);
+    return _videoPlayerPlatform.getPosition(_playerId);
   }
 
   /// Sets the video's current timestamp to be at [position].
@@ -408,7 +414,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     } else if (position < Duration.zero) {
       position = Duration.zero;
     }
-    await _platform.seekTo(_playerId, position);
+    await _videoPlayerPlatform.seekTo(_playerId, position);
     _updatePosition(position);
   }
 
@@ -485,7 +491,9 @@ class _VideoPlayerState extends State<VideoPlayer> {
   Widget build(BuildContext context) {
     return _playerId == VideoPlayerController.kUninitializedPlayerId
         ? Container()
-        : _platform.buildViewWithOptions(VideoViewOptions(playerId: _playerId));
+        : _videoPlayerPlatform.buildViewWithOptions(
+          VideoViewOptions(playerId: _playerId),
+        );
   }
 }
 
