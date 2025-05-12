@@ -166,6 +166,25 @@ await VideoPlayerPip.instance.togglePipMode(
 await VideoPlayerPip.exitPipMode();
 ```
 
+### isBuffering 
+  /// Gets the current buffering state of the video player.
+  ///
+  /// For Android, it will use a workaround due to a [bug](https://github.com/flutter/flutter/issues/165149)
+  /// affecting the `video_player` plugin, preventing it from getting the
+  /// actual buffering state. This currently results in the `VideoPlayerController` always buffering,
+  /// thus breaking UI elements.
+  ///
+  /// For this, the actual buffer position is used to determine if the video is
+  /// buffering or not. See Issue [#912](https://github.com/fluttercommunity/chewie/pull/912) for more details.
+
+
+  so use videoPlayerController.getIsBuffering()
+
+```dart
+bool isPipSupported = await VideoPlayerPip.isPipSupported();
+```
+
+
 ## Example
 
 Check out the [example app](example/) for a complete implementation.
