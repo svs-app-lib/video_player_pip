@@ -142,7 +142,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
                 const width = 300;
                 final height = width / aspectRatio;
                 _controller.enterPipMode(
-                  context: context,
                   width: width,
                   height: height.toInt(),
                 );

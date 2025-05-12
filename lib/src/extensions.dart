@@ -1,6 +1,5 @@
 import '../video_player_pip.dart';
 import 'video_player_controller.dart';
-import 'package:flutter/material.dart';
 
 extension VideoPlayerControllerExtension on VideoPlayerController {
   /// Checks if the device supports PiP mode.
@@ -9,7 +8,7 @@ extension VideoPlayerControllerExtension on VideoPlayerController {
   }
 
   /// Enters PiP mode for the specified player ID.
-  Future<bool> enterPipMode({int? width, int? height, BuildContext? context}) {
+  Future<bool> enterPipMode({int? width, int? height}) {
     return VideoPlayerPip.enterPipMode(this, width: width, height: height);
   }
 

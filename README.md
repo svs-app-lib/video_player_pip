@@ -123,7 +123,6 @@ class _VideoScreenState extends State<VideoScreen> {
           
           // Enter PiP mode
           await _controller.enterPipMode(
-            context: context,
             width: width,
             height: height,
           );
@@ -158,7 +157,6 @@ await VideoPlayerPip.instance.togglePipMode(
   _controller, 
   width: 300, 
   height: 200, 
-  context: context,
 );
 ```
 

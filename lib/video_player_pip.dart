@@ -32,7 +32,6 @@ class VideoPlayerPip {
   /// Optional parameters:
   /// - [width]: Desired width of the PiP window (in pixels)
   /// - [height]: Desired height of the PiP window (in pixels)
-  /// - [context]: Required for Android. The BuildContext used to show the PiP window.
   ///
   /// Note: The controller must be initialized and should preferably be using
   /// [VideoViewType.platformView] for PiP to work correctly.
@@ -44,10 +43,7 @@ class VideoPlayerPip {
   ///   videoViewType: VideoViewType.platformView,
   /// );
   /// await controller.initialize();
-  /// // For iOS:
   /// await VideoPlayerPip.enterPipMode(controller, width: 300, height: 200);
-  /// // For Android:
-  /// await VideoPlayerPip.enterPipMode(controller, width: 300, height: 200, context: context);
   /// ```
   static Future<bool> enterPipMode(
     VideoPlayerController controller, {
@@ -106,14 +102,12 @@ class VideoPlayerPip {
   /// Optional parameters:
   /// - [width]: Desired width of the PiP window (in pixels)
   /// - [height]: Desired height of the PiP window (in pixels)
-  /// - [context]: Required for Android. The BuildContext used to show the PiP window.
   ///
   /// Returns `true` if the operation was successful, or `false` otherwise.
   Future<bool> togglePipMode(
     VideoPlayerController controller, {
     int? width,
     int? height,
-    BuildContext? context,
   }) async {
     final bool isInPip = await isInPipMode();
 
