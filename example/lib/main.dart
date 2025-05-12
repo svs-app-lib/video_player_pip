@@ -54,6 +54,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
   late final VideoPlayerController _controller;
   String _debugStatus = "Starting initialization";
   bool _videoInitialized = false;
+  bool _isBuffering = false;
 
   @override
   void initState() {
@@ -74,6 +75,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
       // Initialize the PipController
       await _controller.initialize();
+      await _controller.play();
 
       setState(() {
         _debugStatus = "Initializing VideoPlayerController";
@@ -82,7 +84,22 @@ class _PlayerScreenState extends State<PlayerScreen> {
       _videoInitialized = true;
 
       _controller.addListener(() {
-        print("buffering: ${_controller.value.isBuffering}");
+        final isb = _controller.getIsBuffering();
+        if (_isBuffering != isb) {
+          setState(() {
+            _isBuffering = isb;
+          });
+        }
+      });
+
+      await _controller.seekTo(const Duration(seconds: 110));
+
+      Future.delayed(const Duration(seconds: 5), () {
+        _controller.seekTo(const Duration(seconds: 120));
+
+        Future.delayed(const Duration(seconds: 5), () {
+          _controller.seekTo(const Duration(seconds: 240));
+        });
       });
     } catch (e) {
       print(e);
@@ -121,6 +138,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
                     ],
                   ),
           ),
+          if (_isBuffering)
+            const Center(
+              child: CircularProgressIndicator(),
+            ),
           if (_videoInitialized)
             Center(
               child: IconButton(
