@@ -136,9 +136,21 @@ class VideoPlayerPipPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
         
         // Default to 16:9 if dimensions are invalid or too small
         val aspectRatio = if (width > 0 && height > 0 && width >= 100 && height >= 100) {
-          Rational(width, height)
+          val currentRatio = width.toFloat() / height.toFloat()
+          // Android's documented min/max aspect ratio for PiP.
+          // See: https://developer.android.com/guide/topics/ui/picture-in-picture#recqs
+          // Values are approximately 1/2.39 and 2.39.
+          val minAllowedAspectRatio = 0.418410f 
+          val maxAllowedAspectRatio = 2.390000f
+
+          if (currentRatio >= minAllowedAspectRatio && currentRatio <= maxAllowedAspectRatio) {
+            Rational(width, height)
+          } else {
+            Log.w(TAG, "Provided width ($width) and height ($height) result in an extreme aspect ratio ($currentRatio). Defaulting to 16:9. Allowed range: [$minAllowedAspectRatio, $maxAllowedAspectRatio]")
+            Rational(16, 9)
+          }
         } else {
-          Log.d(TAG, "Using default 16:9 aspect ratio as dimensions are invalid")
+          Log.d(TAG, "Using default 16:9 aspect ratio as dimensions are invalid (width: $width, height: $height) or too small (min 100x100)")
           Rational(16, 9)
         }
         
