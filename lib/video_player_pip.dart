@@ -50,7 +50,7 @@ class VideoPlayerPip {
     int? width,
     int? height,
   }) {
-    if (controller.playerId == VideoPlayerController.kUninitializedPlayerId) {
+    if (controller.textureId == VideoPlayerController.kUninitializedTextureId) {
       debugPrint(
         'VideoPlayerPip: Cannot enter PiP mode with uninitialized controller',
       );
@@ -59,7 +59,7 @@ class VideoPlayerPip {
 
     // iOS implementation uses native PiP
     return _platform.enterPipMode(
-      controller.playerId,
+      controller.textureId,
       width: width,
       height: height,
     );
