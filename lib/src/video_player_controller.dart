@@ -62,7 +62,9 @@ class VideoPlayerValue {
     this.buffered = const <DurationRange>[],
     this.isInitialized = false,
     this.isPlaying = false,
+    this.isLooping = false,
     this.isBuffering = false,
+    this.volume = 1.0,
     this.playbackSpeed = 1.0,
     this.errorDescription,
     this.isCompleted = false,
@@ -94,8 +96,14 @@ class VideoPlayerValue {
   /// True if the video is playing. False if it's paused.
   final bool isPlaying;
 
+  /// True if the video is looping.
+  final bool isLooping;
+
   /// True if the video is currently buffering.
   final bool isBuffering;
+
+  /// The current volume of the playback.
+  final double volume;
 
   /// The current speed of the playback.
   final double playbackSpeed;
@@ -147,7 +155,9 @@ class VideoPlayerValue {
     List<DurationRange>? buffered,
     bool? isInitialized,
     bool? isPlaying,
+    bool? isLooping,
     bool? isBuffering,
+    double? volume,
     double? playbackSpeed,
     String? errorDescription,
     bool? isCompleted,
@@ -159,7 +169,9 @@ class VideoPlayerValue {
       buffered: buffered ?? this.buffered,
       isInitialized: isInitialized ?? this.isInitialized,
       isPlaying: isPlaying ?? this.isPlaying,
+      isLooping: isLooping ?? this.isLooping,
       isBuffering: isBuffering ?? this.isBuffering,
+      volume: volume ?? this.volume,
       playbackSpeed: playbackSpeed ?? this.playbackSpeed,
       errorDescription: errorDescription ?? this.errorDescription,
       isCompleted: isCompleted ?? this.isCompleted,
@@ -175,7 +187,9 @@ class VideoPlayerValue {
           position == other.position &&
           listEquals(buffered, other.buffered) &&
           isPlaying == other.isPlaying &&
+          isLooping == other.isLooping &&
           isBuffering == other.isBuffering &&
+          volume == other.volume &&
           playbackSpeed == other.playbackSpeed &&
           errorDescription == other.errorDescription &&
           size == other.size &&
@@ -188,7 +202,9 @@ class VideoPlayerValue {
     position,
     buffered,
     isPlaying,
+    isLooping,
     isBuffering,
+    volume,
     playbackSpeed,
     errorDescription,
     size,
@@ -367,10 +383,21 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     await _applyPlayPause();
   }
 
+  /// Sets whether or not the video should loop after playing once. See also
+  /// [VideoPlayerValue.isLooping].
+  Future<void> setLooping(bool looping) async {
+    value = value.copyWith(isLooping: looping);
+    await _applyLooping();
+  }
+
   /// Pauses the video.
   Future<void> pause() async {
     value = value.copyWith(isPlaying: false);
     await _applyPlayPause();
+  }
+
+  Future<void> _applyLooping() async {
+    await _videoPlayerPlatform.setLooping(_playerId, value.isLooping);
   }
 
   Future<void> _applyPlayPause() async {
@@ -391,6 +418,10 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     } else {
       await _videoPlayerPlatform.pause(_playerId);
     }
+  }
+
+  Future<void> _applyVolume() async {
+    await _videoPlayerPlatform.setVolume(_playerId, value.volume);
   }
 
   Future<void> _applyPlaybackSpeed() async {
@@ -416,6 +447,15 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     }
     await _videoPlayerPlatform.seekTo(_playerId, position);
     _updatePosition(position);
+  }
+
+  /// Sets the audio volume of [this].
+  ///
+  /// [volume] indicates a value between 0.0 (silent) and 1.0 (full volume) on a
+  /// linear scale.
+  Future<void> setVolume(double volume) async {
+    value = value.copyWith(volume: volume.clamp(0.0, 1.0));
+    await _applyVolume();
   }
 
   /// Sets the playback speed.
