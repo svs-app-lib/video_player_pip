@@ -540,6 +540,24 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           } else {
             value = value.copyWith(isPlaying: event.isPlaying);
           }
+
+          // Fix for Android where isBuffering can be stuck as true
+          // Check if we need to correct buffering state for Android platform
+          if (defaultTargetPlatform == TargetPlatform.android &&
+              value.isBuffering) {
+            final bool isVideoEnded = value.position >= value.duration;
+            final bool hasBufferedRanges = value.buffered.isNotEmpty;
+
+            // Calculate if player has reached end of buffered content
+            final bool hasReachedBufferedEnd = hasBufferedRanges &&
+                value.position.inSeconds >= value.buffered[0].end.inSeconds;
+
+            // Set isBuffering to false if video has ended, has an error, or player position
+            // has reached the end of the buffered range
+            if (isVideoEnded || value.hasError || hasReachedBufferedEnd) {
+              value = value.copyWith(isBuffering: false);
+            }
+          }
         case VideoEventType.unknown:
           break;
       }
