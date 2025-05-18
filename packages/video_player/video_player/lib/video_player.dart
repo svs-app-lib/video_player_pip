@@ -78,13 +78,13 @@ class VideoPlayerValue {
     this.isInitialized = false,
     this.isPlaying = false,
     this.isLooping = false,
-    this.isBuffering = false,
+    bool isBuffering = false,
     this.volume = 1.0,
     this.playbackSpeed = 1.0,
     this.rotationCorrection = 0,
     this.errorDescription,
     this.isCompleted = false,
-  });
+  }) : _isBuffering = isBuffering;
 
   /// Returns an instance for a video that hasn't been loaded.
   const VideoPlayerValue.uninitialized()
@@ -128,9 +128,6 @@ class VideoPlayerValue {
 
   /// True if the video is looping.
   final bool isLooping;
-
-  /// True if the video is currently buffering.
-  final bool isBuffering;
 
   /// The current volume of the playback.
   final double volume;
@@ -179,6 +176,34 @@ class VideoPlayerValue {
     return aspectRatio;
   }
 
+  /// True if the video is currently buffering.
+  ///
+  /// For Android, this works around a bug in the video_player plugin
+  /// by checking the actual buffer position vs playback position.
+  bool get isBuffering {
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      if (_isBuffering) {
+        // Special case, if the video is finished, don't show buffering indicator
+        final int positionMs = position.inMilliseconds;
+        if (positionMs >= duration.inMilliseconds) {
+          return false;
+        }
+
+        // Get the last buffered range, or -1 if none exists
+        final int bufferMs =
+            buffered.isNotEmpty ? buffered.last.end.inMilliseconds : -1;
+
+        return positionMs >= bufferMs;
+      }
+      return false;
+    }
+
+    return _isBuffering;
+  }
+
+  /// The internal buffering state value
+  final bool _isBuffering;
+
   /// Returns a new instance that has the same values as this current instance,
   /// except for any overrides passed in as arguments to [copyWith].
   VideoPlayerValue copyWith({
@@ -208,7 +233,7 @@ class VideoPlayerValue {
       isInitialized: isInitialized ?? this.isInitialized,
       isPlaying: isPlaying ?? this.isPlaying,
       isLooping: isLooping ?? this.isLooping,
-      isBuffering: isBuffering ?? this.isBuffering,
+      isBuffering: isBuffering ?? _isBuffering,
       volume: volume ?? this.volume,
       playbackSpeed: playbackSpeed ?? this.playbackSpeed,
       rotationCorrection: rotationCorrection ?? this.rotationCorrection,
@@ -250,7 +275,7 @@ class VideoPlayerValue {
           listEquals(buffered, other.buffered) &&
           isPlaying == other.isPlaying &&
           isLooping == other.isLooping &&
-          isBuffering == other.isBuffering &&
+          _isBuffering == other._isBuffering &&
           volume == other.volume &&
           playbackSpeed == other.playbackSpeed &&
           errorDescription == other.errorDescription &&
@@ -268,7 +293,7 @@ class VideoPlayerValue {
         buffered,
         isPlaying,
         isLooping,
-        isBuffering,
+        _isBuffering,
         volume,
         playbackSpeed,
         errorDescription,
@@ -539,24 +564,6 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
                 value.copyWith(isPlaying: event.isPlaying, isCompleted: false);
           } else {
             value = value.copyWith(isPlaying: event.isPlaying);
-          }
-
-          // Fix for Android where isBuffering can be stuck as true
-          // Check if we need to correct buffering state for Android platform
-          if (defaultTargetPlatform == TargetPlatform.android &&
-              value.isBuffering) {
-            final bool isVideoEnded = value.position >= value.duration;
-            final bool hasBufferedRanges = value.buffered.isNotEmpty;
-
-            // Calculate if player has reached end of buffered content
-            final bool hasReachedBufferedEnd = hasBufferedRanges &&
-                value.position.inSeconds >= value.buffered[0].end.inSeconds;
-
-            // Set isBuffering to false if video has ended, has an error, or player position
-            // has reached the end of the buffered range
-            if (isVideoEnded || value.hasError || hasReachedBufferedEnd) {
-              value = value.copyWith(isBuffering: false);
-            }
           }
         case VideoEventType.unknown:
           break;
