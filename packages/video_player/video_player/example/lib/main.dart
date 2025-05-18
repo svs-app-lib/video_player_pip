@@ -416,6 +416,7 @@ class VideoPlayerScreen extends StatefulWidget {
 class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   late VideoPlayerController _controller;
   bool _isInitialized = false;
+  bool _isBuffering = false;
 
   @override
   void initState() {
@@ -446,6 +447,12 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       _controller =
           VideoPlayerController.networkUrl(Uri.parse(widget.videoItem.url));
     }
+
+    _controller.addListener(() {
+      setState(() {
+        _isBuffering = _controller.value.isBuffering;
+      });
+    });
 
     await _controller.initialize();
     setState(() {
@@ -481,6 +488,19 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                       allowScrubbing: true,
                       padding: const EdgeInsets.all(10.0),
                     ),
+                    if (_isBuffering)
+                      Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        child: Container(
+                          color: Colors.black26,
+                          child: Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               )

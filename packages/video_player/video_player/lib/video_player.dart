@@ -31,15 +31,11 @@ export 'src/video_cache_manager.dart';
 class ExtendedVideoPlayerOptions extends VideoPlayerOptions {
   /// Creates an instance with additional view type settings.
   ExtendedVideoPlayerOptions({
-    bool mixWithOthers = false,
-    bool allowBackgroundPlayback = false,
-    VideoPlayerWebOptions? webOptions,
+    super.mixWithOthers,
+    super.allowBackgroundPlayback,
+    super.webOptions,
     this.viewType = VideoViewType.textureView,
-  }) : super(
-          mixWithOthers: mixWithOthers,
-          allowBackgroundPlayback: allowBackgroundPlayback,
-          webOptions: webOptions,
-        );
+  });
 
   /// The type of view to use for rendering the video.
   ///
@@ -78,13 +74,13 @@ class VideoPlayerValue {
     this.isInitialized = false,
     this.isPlaying = false,
     this.isLooping = false,
-    bool isBuffering = false,
+    this.isBuffering = false,
     this.volume = 1.0,
     this.playbackSpeed = 1.0,
     this.rotationCorrection = 0,
     this.errorDescription,
     this.isCompleted = false,
-  }) : _isBuffering = isBuffering;
+  });
 
   /// Returns an instance for a video that hasn't been loaded.
   const VideoPlayerValue.uninitialized()
@@ -122,6 +118,9 @@ class VideoPlayerValue {
 
   /// The currently buffered ranges.
   final List<DurationRange> buffered;
+
+  /// True if the video is buffering.
+  final bool isBuffering;
 
   /// True if the video is playing. False if it's paused.
   final bool isPlaying;
@@ -176,34 +175,6 @@ class VideoPlayerValue {
     return aspectRatio;
   }
 
-  /// True if the video is currently buffering.
-  ///
-  /// For Android, this works around a bug in the video_player plugin
-  /// by checking the actual buffer position vs playback position.
-  bool get isBuffering {
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      if (_isBuffering) {
-        // Special case, if the video is finished, don't show buffering indicator
-        final int positionMs = position.inMilliseconds;
-        if (positionMs >= duration.inMilliseconds) {
-          return false;
-        }
-
-        // Get the last buffered range, or -1 if none exists
-        final int bufferMs =
-            buffered.isNotEmpty ? buffered.last.end.inMilliseconds : -1;
-
-        return positionMs >= bufferMs;
-      }
-      return false;
-    }
-
-    return _isBuffering;
-  }
-
-  /// The internal buffering state value
-  final bool _isBuffering;
-
   /// Returns a new instance that has the same values as this current instance,
   /// except for any overrides passed in as arguments to [copyWith].
   VideoPlayerValue copyWith({
@@ -233,7 +204,7 @@ class VideoPlayerValue {
       isInitialized: isInitialized ?? this.isInitialized,
       isPlaying: isPlaying ?? this.isPlaying,
       isLooping: isLooping ?? this.isLooping,
-      isBuffering: isBuffering ?? _isBuffering,
+      isBuffering: isBuffering ?? this.isBuffering,
       volume: volume ?? this.volume,
       playbackSpeed: playbackSpeed ?? this.playbackSpeed,
       rotationCorrection: rotationCorrection ?? this.rotationCorrection,
@@ -275,7 +246,7 @@ class VideoPlayerValue {
           listEquals(buffered, other.buffered) &&
           isPlaying == other.isPlaying &&
           isLooping == other.isLooping &&
-          _isBuffering == other._isBuffering &&
+          isBuffering == other.isBuffering &&
           volume == other.volume &&
           playbackSpeed == other.playbackSpeed &&
           errorDescription == other.errorDescription &&
@@ -293,7 +264,7 @@ class VideoPlayerValue {
         buffered,
         isPlaying,
         isLooping,
-        _isBuffering,
+        isBuffering,
         volume,
         playbackSpeed,
         errorDescription,
