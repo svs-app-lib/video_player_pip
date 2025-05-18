@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:video_player_pip/index.dart';
+import 'package:video_player_pip/video_player_pip.dart';
 
 void main(List<String> args) {
   runApp(const MaterialApp(home: HomeScreen()));
@@ -68,8 +68,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
       });
 
       // Create the controller
-      _controller = VideoPlayerController.network(
-        'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
+      _controller = VideoPlayerController.networkUrl(
+        Uri.parse(
+            'https://live-hls-abr-cdn.livepush.io/live/bigbuckbunnyclip/index.mpd'),
       );
 
       // Initialize the PipController

@@ -1,8 +1,15 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'src/video_player_controller.dart';
+import 'package:video_player/video_player.dart';
 import 'video_player_pip_platform_interface.dart';
+
+export 'video_player_pip.dart';
+export 'video_player_pip_platform_interface.dart' show VideoPlayerPipPlatform;
+
+// Export the PiP-enabled VideoPlayerController that supports view type selection
+export 'package:video_player/video_player.dart';
+export 'src/extensions.dart';
 
 /// A Flutter plugin that adds Picture-in-Picture (PiP) functionality to the video_player package.
 ///
