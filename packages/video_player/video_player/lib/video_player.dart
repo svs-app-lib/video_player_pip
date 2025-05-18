@@ -469,10 +469,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     if (videoPlayerOptions is ExtendedVideoPlayerOptions) {
       viewType = (videoPlayerOptions as ExtendedVideoPlayerOptions).viewType;
     } else {
-      // Default to PlatformView for iOS, TextureView for other platforms
-      viewType = defaultTargetPlatform == TargetPlatform.iOS
-          ? VideoViewType.platformView
-          : VideoViewType.textureView;
+      viewType = VideoViewType.textureView;
     }
 
     _textureId = (await _videoPlayerPlatform.createWithOptions(
