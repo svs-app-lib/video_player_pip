@@ -24,7 +24,7 @@ flutter:
 dependencies:
   flutter:
     sdk: flutter
-  html: ^0.15.0
+  html: 0.15.4
   video_player_android:
     path: ../video_player_android
   video_player_avfoundation:
