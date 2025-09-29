@@ -15,7 +15,7 @@ A Flutter plugin that adds Picture-in-Picture functionality to the video_player 
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
   s.dependency 'Flutter'
-  s.platform = :ios, '15.0'  # PiP requires iOS 15+
+  s.platform = :ios, '14.0'  # PiP requires iOS 15+
   
   # Required frameworks for PiP functionality
   s.frameworks = 'AVFoundation', 'AVKit'
